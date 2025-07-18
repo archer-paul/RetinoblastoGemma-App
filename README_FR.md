@@ -251,7 +251,6 @@ python scripts/validate_model.py --dataset validation_set/
 
 - **Issues GitHub** : Rapports de bugs et demandes de fonctionnalités
 - **Discussions** : Forum communautaire pour questions générales
-- **Support médical** : medical@retinoblastogamma.org (validation clinique)
 
 ## Licence et Attributions
 
