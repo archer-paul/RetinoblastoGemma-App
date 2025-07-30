@@ -130,23 +130,22 @@ class EyeDetectorV2:
             return self._create_empty_result(str(e))
     
     def _determine_detection_mode(self, width: int, height: int, aspect_ratio: float) -> str:
-        """Détermine le mode de détection optimal selon l'image"""
+        """Détermine le mode de détection optimal - OPTIMISÉ DATASET 2 YEUX"""
         
-        # Image très horizontale = probablement deux yeux côte à côte
-        if aspect_ratio > 2.5:
+        # DATASET LOGIC: Si l'image est "pas trop carrée" = probablement 2 yeux croppés
+        if aspect_ratio > 1.3:  # Plus large que haute = 2 yeux côte à côte
             return 'cropped_eye'
         
-        # Image carrée ou légèrement rectangulaire ET petite = probablement un œil seul
-        if 0.5 <= aspect_ratio <= 2.0 and max(width, height) < 400:  # Augmenté de 800 à 400
+        # Si aspect proche de 1:1 mais image pas énorme = aussi probablement cropped
+        if 0.7 <= aspect_ratio <= 1.3 and max(width, height) < 800:
             return 'cropped_eye'
         
-        # Grande image ou aspect ratio normal = visage complet
-        # CHANGEMENT PRINCIPAL: Privilégier full_face pour les images > 400px
-        if min(width, height) > 200:  # Réduit le seuil
+        # Très grande image = visage complet
+        if min(width, height) > 400:
             return 'full_face'
         
-        # Par défaut, essayer les deux
-        return 'mixed'
+        # Par défaut = cropped (car ton dataset est principalement cropped)
+        return 'cropped_eye'
     
     def _extract_eyes_from_face(self, face_landmarks, image: np.ndarray, face_idx: int) -> List[Dict]:
         """Extrait les yeux d'un visage détecté par MediaPipe - AMÉLIORÉ"""
@@ -446,30 +445,46 @@ class EyeDetectorV2:
             return []
     
     def _analyze_single_eye_region(self, image: np.ndarray) -> List[Dict]:
-        """Analyse une image contenant un seul œil"""
+        """Analyse une image contenant TOUJOURS deux yeux - OPTIMISÉ DATASET"""
         try:
             h, w, _ = image.shape
-            
-            # Utiliser l'image entière comme région oculaire
-            eye_pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-            
-            # Essayer de détecter quel œil c'est (optionnel)
-            eye_type = self._guess_eye_type(image)
-            
-            region = {
-                'id': f'{eye_type}_single',
-                'type': eye_type,
-                'bbox': (0, 0, w, h),
-                'image': eye_pil,
+
+            # TOUJOURS diviser en deux yeux (gauche et droit)
+            mid_x = w // 2
+
+            regions = []
+
+            # ŒIL GAUCHE (première moitié de l'image)
+            left_region = image[:, :mid_x]
+            left_pil = Image.fromarray(cv2.cvtColor(left_region, cv2.COLOR_BGR2RGB))
+            regions.append({
+                'id': 'left_eye_crop',
+                'type': 'left',
+                'bbox': (0, 0, mid_x, h),
+                'image': left_pil,
                 'landmarks': [],
-                'confidence': 0.8,
-                'source': 'single_eye_analysis'
-            }
-            
-            return [region]
-            
+                'confidence': 0.9,  # Confiance élevée car on sait qu'il y a 2 yeux
+                'source': 'dataset_dual_eye_split'
+            })
+
+            # ŒIL DROIT (seconde moitié de l'image)
+            right_region = image[:, mid_x:]
+            right_pil = Image.fromarray(cv2.cvtColor(right_region, cv2.COLOR_BGR2RGB))
+            regions.append({
+                'id': 'right_eye_crop',
+                'type': 'right',
+                'bbox': (mid_x, 0, w - mid_x, h),
+                'image': right_pil,
+                'landmarks': [],
+                'confidence': 0.9,  # Confiance élevée car on sait qu'il y a 2 yeux
+                'source': 'dataset_dual_eye_split'
+            })
+
+            logger.info(f"Dataset mode: Force split into 2 eyes - Left: {mid_x}x{h}, Right: {w-mid_x}x{h}")
+            return regions
+
         except Exception as e:
-            logger.error(f"Single eye analysis failed: {e}")
+            logger.error(f"Dataset dual eye analysis failed: {e}")
             return []
     
     def _guess_eye_type(self, image: np.ndarray) -> str:

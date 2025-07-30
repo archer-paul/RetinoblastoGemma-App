@@ -743,14 +743,33 @@ class RetinoblastoGemmaV6:
                 "Eye detector not initialized. Please wait or restart the application.")
             return
         
-        # Confirmation pour analyse
+        # NOUVEAU: Détecter le type d'image - DATASET MODE
+        try:
+            test_image = Image.open(self.current_image_path)
+            w, h = test_image.size
+            aspect_ratio = w / h
+
+            # DATASET LOGIC: Assume toujours 2 yeux
+            if aspect_ratio > 1.2:
+                analysis_type = "dual eye regions (horizontal)"
+            else:
+                analysis_type = "dual eye regions (compact)"
+
+            test_image.close()
+
+        except:
+            analysis_type = "dual eye dataset image"
+
+        # Confirmation pour analyse avec info dataset
         result = messagebox.askyesno("Start Analysis", 
-            "🔍 Start retinoblastoma analysis?\n\n"
-            "This will analyze the image for signs of leukocoria using:\n"
-            "• Local Gemma 3n AI model\n"
-            "• Computer vision eye detection\n"
-            "• Face tracking (if enabled)\n\n"
-            "Analysis may take 30-90 seconds.")
+            f"🔍 Start retinoblastoma analysis?\n\n"
+            f"Dataset mode: {analysis_type}\n"
+            f"Expected: 2 eyes will be analyzed\n\n"
+            f"This will analyze using:\n"
+            f"• Local Gemma 3n AI model\n"
+            f"• Dual eye detection system\n"
+            f"• Face tracking (if enabled)\n\n"
+            f"Analysis may take 30-90 seconds.")
         
         if not result:
             return
@@ -1138,6 +1157,32 @@ PATIENT INFORMATION:
         
         # Sauvegarder les résultats
         self.current_results = report
+
+        # === SECTION SPÉCIALE DATASET ===
+        if len(analysis_results.get('results', [])) == 2:
+            left_result = analysis_results['results'][0] if len(analysis_results['results']) > 0 else None
+            right_result = analysis_results['results'][1] if len(analysis_results['results']) > 1 else None
+            
+            report += f"\n\nDATASET DUAL EYE ANALYSIS:\n{'='*35}"
+            
+            if left_result:
+                left_detected = left_result.get('leukocoria_detected', False)
+                left_conf = left_result.get('confidence', 0)
+                report += f"\nLeft Eye: {'🚨 DETECTED' if left_detected else '✅ NORMAL'} ({left_conf:.1f}%)"
+            
+            if right_result:
+                right_detected = right_result.get('leukocoria_detected', False) 
+                right_conf = right_result.get('confidence', 0)
+                report += f"\nRight Eye: {'🚨 DETECTED' if right_detected else '✅ NORMAL'} ({right_conf:.1f}%)"
+            
+            # Évaluation bilatérale
+            both_detected = (left_result and left_result.get('leukocoria_detected', False) and 
+                            right_result and right_result.get('leukocoria_detected', False))
+            
+            if both_detected:
+                report += f"\n\n🚨 BILATERAL RETINOBLASTOMA SUSPECTED"
+                report += f"\nEMERGENCY: Both eyes show signs of leukocoria"
+                report += f"\nIMMEDIATE pediatric ophthalmology consultation required"
     
     def update_patient_history(self):
         """Met à jour l'affichage de l'historique patient"""

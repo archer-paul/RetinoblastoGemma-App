@@ -701,47 +701,167 @@ class VisualizationV2:
         except Exception as e:
             logger.error(f"Error drawing single eye analysis: {e}")
     
-    def _draw_dual_eye_analysis(self, draw: ImageDraw.Draw, image_size: Tuple[int, int], regions: List[Dict], results: List[Dict]):
-        """Dessine l'analyse pour deux yeux (mode croppé horizontal)"""
+    def _draw_dual_eye_modern_analysis(self, draw: ImageDraw.Draw, image_size: Tuple[int, int], 
+                                     regions: List[Dict], results: List[Dict], start_y: int):
+        """Analyse moderne pour DEUX yeux (optimisé dataset) - TOUJOURS 2 yeux"""
         try:
             w, h = image_size
+
+            # Deux cartes côte à côte pour les deux yeux
+            card_width = (w - 150) // 2  # Espace pour 2 cartes + marges
+            card_height = 140
+            card_spacing = 25
+
+            left_card_x = 50
+            right_card_x = left_card_x + card_width + card_spacing
+            card_y = start_y
+
+            # Titre général
+            title = "👁️ DUAL EYE ANALYSIS - DATASET MODE"
+            title_font = self.fonts.get('subtitle') or self.fonts.get('normal')
+            self._draw_text_centered(
+                draw, (w // 2, start_y - 30), title,
+                self.colors['primary'], title_font
+            )
+
+            # Traiter chaque œil
+            eye_positions = [
+                (left_card_x, "LEFT EYE", "👁️‍🗨️"),
+                (right_card_x, "RIGHT EYE", "👁️")
+            ]
+
+            for i, (card_x, eye_label, eye_icon) in enumerate(eye_positions):
+                if i < len(regions) and i < len(results):
+                    region = regions[i]
+                    result = results[i]
+
+                    # Carte moderne pour cet œil
+                    self._draw_modern_card(
+                        draw, 
+                        (card_x, card_y, card_x + card_width, card_y + card_height),
+                        self.colors['card_bg']
+                    )
+
+                    # En-tête de l'œil
+                    draw.text((card_x + 15, card_y + 10), f"{eye_icon} {eye_label}", 
+                             fill=self.colors['primary'], font=self.fonts.get('normal'))
+
+                    if result:
+                        detected = result.get('leukocoria_detected', False)
+                        confidence = result.get('confidence', 0)
+
+                        # GROS STATUT VISUEL
+                        status_y = card_y + 40
+                        if detected:
+                            status_text = "🚨 DETECTED"
+                            status_color = self.colors['danger']
+                            # Fond d'alerte
+                            draw.rectangle([card_x + 10, status_y - 5, card_x + card_width - 10, status_y + 25], 
+                                         fill=(255, 235, 235))
+                        else:
+                            status_text = "✅ NORMAL"
+                            status_color = self.colors['safe']
+                            # Fond normal
+                            draw.rectangle([card_x + 10, status_y - 5, card_x + card_width - 10, status_y + 25], 
+                                         fill=(235, 255, 235))
+
+                        # Texte du statut
+                        status_font = self.fonts.get('normal') or self.fonts.get('small')
+                        self._draw_text_centered(
+                            draw, (card_x + card_width // 2, status_y + 5), status_text,
+                            status_color, status_font
+                        )
+
+                        # Barre de confiance compacte
+                        conf_y = card_y + 75
+                        bar_x = card_x + 15
+                        bar_width = card_width - 30
+                        bar_height = 6
+
+                        # Fond barre
+                        draw.rectangle([bar_x, conf_y, bar_x + bar_width, conf_y + bar_height], 
+                                      fill=(220, 220, 220))
+
+                        # Barre de confiance
+                        conf_width = int((confidence / 100) * bar_width)
+                        conf_color = status_color
+                        draw.rectangle([bar_x, conf_y, bar_x + conf_width, conf_y + bar_height], 
+                                      fill=conf_color)
+
+                        # Texte confiance
+                        conf_text = f"{confidence:.0f}%"
+                        self._draw_text_centered(
+                            draw, (card_x + card_width // 2, conf_y + 15), conf_text,
+                            self.colors['text_dark'], self.fonts.get('small')
+                        )
+
+                        # Risk level en bas
+                        risk_level = result.get('risk_level', 'unknown')
+                        urgency = result.get('urgency', 'routine')
+
+                        if urgency == 'immediate':
+                            risk_display = "🔴 HIGH RISK"
+                            risk_color = self.colors['danger']
+                        elif urgency in ['urgent', 'soon']:
+                            risk_display = "🟡 MONITOR"
+                            risk_color = self.colors['warning']
+                        else:
+                            risk_display = "🟢 LOW RISK"
+                            risk_color = self.colors['safe']
+
+                        self._draw_text_centered(
+                            draw, (card_x + card_width // 2, card_y + 110), risk_display,
+                            risk_color, self.fonts.get('small')
+                        )
+
+            # Résumé global sous les deux cartes
+            summary_y = card_y + card_height + 20
+            self._draw_dataset_summary(draw, w, summary_y, regions, results)
+
+        except Exception as e:
+            logger.error(f"Error drawing dual eye modern analysis: {e}")
+
+    def _draw_dataset_summary(self, draw: ImageDraw.Draw, width: int, start_y: int, 
+                             regions: List[Dict], results: List[Dict]):
+        """Résumé global optimisé pour dataset 2 yeux"""
+        try:
+            # Compter les détections
+            total_eyes = len(results)
+            positive_eyes = sum(1 for r in results if r.get('leukocoria_detected', False))
             
-            # Analyser chaque œil
-            for i, (region, result) in enumerate(zip(regions, results)):
-                # Position des informations
-                info_x = 10 + (i * (w // 2))
-                info_y = h - 180
-                
-                eye_type = region.get('type', f'eye_{i+1}').upper()
-                
-                # Encadré pour chaque œil
-                box_width = (w // 2) - 20
-                box_height = 150
-                
-                draw.rectangle([info_x, info_y, info_x + box_width, info_y + box_height],
-                              outline=self.colors['accent'], width=2)
-                
-                # Titre de l'œil
-                title = f"{self.symbols['eye']} {eye_type}"
-                draw.text((info_x + 10, info_y + 10), title, 
-                         fill=self.colors['accent'], font=self.fonts.get('normal'))
-                
-                if result:
-                    # Statut principal
-                    detected = result.get('leukocoria_detected', False)
-                    status = "🚨 DETECTED" if detected else "✅ NORMAL"
-                    status_color = self.colors['danger'] if detected else self.colors['safe']
-                    
-                    draw.text((info_x + 10, info_y + 35), status,
-                             fill=status_color, font=self.fonts.get('small'))
-                    
-                    # Confiance
-                    conf_text = f"Conf: {result.get('confidence', 0):.0f}%"
-                    draw.text((info_x + 10, info_y + 55), conf_text,
-                             fill=self.colors['text_dark'], font=self.fonts.get('tiny'))
+            # Couleur du résumé
+            if positive_eyes >= 2:
+                summary_color = self.colors['danger']
+                summary_text = f"🚨 BILATERAL LEUKOCORIA - {positive_eyes}/2 EYES AFFECTED"
+                priority = "EMERGENCY CONSULTATION REQUIRED"
+            elif positive_eyes == 1:
+                summary_color = self.colors['warning'] 
+                summary_text = f"⚠️ UNILATERAL LEUKOCORIA - {positive_eyes}/2 EYES AFFECTED"
+                priority = "URGENT MEDICAL EVALUATION NEEDED"
+            else:
+                summary_color = self.colors['safe']
+                summary_text = f"✅ NO LEUKOCORIA DETECTED - {total_eyes}/2 EYES NORMAL"
+                priority = "CONTINUE ROUTINE MONITORING"
+            
+            # Fond du résumé
+            summary_height = 60
+            draw.rectangle([30, start_y, width - 30, start_y + summary_height], 
+                          fill=summary_color)
+            
+            # Texte principal
+            self._draw_text_centered(
+                draw, (width // 2, start_y + 15), summary_text,
+                self.colors['text_light'], self.fonts.get('normal')
+            )
+            
+            # Priorité
+            self._draw_text_centered(
+                draw, (width // 2, start_y + 35), priority,
+                self.colors['text_light'], self.fonts.get('small')
+            )
             
         except Exception as e:
-            logger.error(f"Error drawing dual eye analysis: {e}")
+            logger.error(f"Error drawing dataset summary: {e}")
     
     def _draw_multiple_regions_analysis(self, draw: ImageDraw.Draw, image_size: Tuple[int, int], regions: List[Dict], results: List[Dict]):
         """Dessine l'analyse pour multiples régions"""
