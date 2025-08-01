@@ -116,7 +116,7 @@ def main():
         time.sleep(3)
         
         # Vérifier que l'API est prête
-        if wait_for_server("http://localhost:8000", max_wait=10):
+        if wait_for_server("http://localhost:8001", max_wait=10):
             print("✅ API server is ready!")
         else:
             print("⚠️ API server may not be ready yet")
@@ -133,16 +133,16 @@ def main():
         # Déterminer l'URL à ouvrir
         web_url = "http://localhost:8080"  # Vite dev server par défaut
         if not web_process:
-            web_url = "http://localhost:8000"  # API serveur seulement
+            web_url = "http://localhost:8001"  # API serveur seulement
         
         webbrowser.open(web_url)
         
         print("\n" + "=" * 60)
         print("✅ RetinoblastoGemma is running!")
         print(f"🌐 Web interface: {web_url}")
-        print("📡 API server: http://localhost:8000")
-        print("📚 API documentation: http://localhost:8000/docs")
-        print("📊 WebSocket: ws://localhost:8000/ws/progress")
+        print("📡 API server: http://localhost:8001")
+        print("📚 API documentation: http://localhost:8001/docs")
+        print("📊 WebSocket: ws://localhost:8001/ws/progress")
         print("=" * 60)
         print("\n💡 Usage Instructions:")
         print("1. Upload a medical eye image")

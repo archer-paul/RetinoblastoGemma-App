@@ -94,50 +94,187 @@ async def initialize_retino_app():
     global retino_app, initialization_status
     
     try:
-        logger.info("🔄 Starting RetinoblastoGemma initialization...")
+        logger.info("🔄 Starting REAL RetinoblastoGemma initialization...")
         
-        # Importer et initialiser l'application
-        import tkinter as tk
+        # === VRAIE INITIALISATION - PAS DE SIMULATION ===
+        print("\n🤖 STARTING REAL GEMMA 3N INITIALIZATION")
+        print("="*60)
+        
+        # Importer le module main réel
+        import sys
+        sys.path.append('.')
         from main import RetinoblastoGemmaV6
         
-        # Créer une fenêtre Tkinter invisible
-        root = tk.Tk()
-        root.withdraw()  # Cacher la fenêtre
-        root.attributes('-alpha', 0.0)  # Rendre complètement transparente
-        
-        # Simuler l'initialisation progressive
-        modules = ["gemma", "eye_detector", "face_handler", "visualizer"]
-        
-        for i, module in enumerate(modules):
-            initialization_status["modules"][module]["status"] = "loading"
-            initialization_status["overall_progress"] = (i / len(modules)) * 100
+        # Créer une instance réelle (pas Tkinter)
+        class HeadlessRetinoblastoGemma:
+            def __init__(self):
+                self.eye_detector = None
+                self.face_handler = None
+                self.visualizer = None
+                self.gemma_handler = None
             
-            await ws_manager.broadcast({
-                "type": "initialization_progress",
-                "status": initialization_status
-            })
-            
-            # Simuler le temps de chargement
-            await asyncio.sleep(2)
-            
-            initialization_status["modules"][module]["status"] = "ready"
-            initialization_status["modules"][module]["progress"] = 100
+            async def initialize_real_modules(self):
+                """Initialise les vrais modules avec diffusion WebSocket"""
+                try:
+                    initialization_status["status"] = "loading"
+                    initialization_status["overall_progress"] = 0
+                    
+                    # Diffuser l'état initial
+                    await ws_manager.broadcast({
+                        "type": "initialization_progress",
+                        "status": initialization_status,
+                        "message": "Starting system initialization..."
+                    })
+                    
+                    # 1. Eye Detector (25%)
+                    print("🔄 Loading Eye Detector...")
+                    initialization_status["modules"]["eye_detector"]["status"] = "loading"
+                    initialization_status["overall_progress"] = 10
+                    await ws_manager.broadcast({
+                        "type": "initialization_progress",
+                        "status": initialization_status,
+                        "message": "Loading Eye Detector..."
+                    })
+                    
+                    from core.eye_detector_v2 import EyeDetectorV2
+                    self.eye_detector = EyeDetectorV2()
+                    initialization_status["modules"]["eye_detector"]["status"] = "ready"
+                    initialization_status["overall_progress"] = 25
+                    print("✅ Eye Detector loaded")
+                    
+                    await ws_manager.broadcast({
+                        "type": "initialization_progress",
+                        "status": initialization_status,
+                        "message": "Eye Detector ready"
+                    })
+                    
+                    # 2. Face Handler (50%)
+                    print("🔄 Loading Face Handler...")
+                    initialization_status["modules"]["face_handler"]["status"] = "loading"
+                    initialization_status["overall_progress"] = 35
+                    await ws_manager.broadcast({
+                        "type": "initialization_progress",
+                        "status": initialization_status,
+                        "message": "Loading Face Handler..."
+                    })
+                    
+                    from core.face_handler_v2 import FaceHandlerV2
+                    self.face_handler = FaceHandlerV2()
+                    initialization_status["modules"]["face_handler"]["status"] = "ready"
+                    initialization_status["overall_progress"] = 50
+                    print("✅ Face Handler loaded")
+                    
+                    await ws_manager.broadcast({
+                        "type": "initialization_progress",
+                        "status": initialization_status,
+                        "message": "Face Handler ready"
+                    })
+                    
+                    # 3. Visualizer (65%)
+                    print("🔄 Loading Visualizer...")
+                    initialization_status["modules"]["visualizer"]["status"] = "loading"
+                    initialization_status["overall_progress"] = 55
+                    await ws_manager.broadcast({
+                        "type": "initialization_progress",
+                        "status": initialization_status,
+                        "message": "Loading Visualizer..."
+                    })
+                    
+                    from core.visualization_v2 import VisualizationV2
+                    self.visualizer = VisualizationV2()
+                    initialization_status["modules"]["visualizer"]["status"] = "ready"
+                    initialization_status["overall_progress"] = 65
+                    print("✅ Visualizer loaded")
+                    
+                    await ws_manager.broadcast({
+                        "type": "initialization_progress",
+                        "status": initialization_status,
+                        "message": "Visualizer ready"
+                    })
+                    
+                    # 4. GEMMA 3N - LE PLUS CRITIQUE (65% -> 100%)
+                    print("🔄 Loading Gemma 3n - This will take 3-5 minutes...")
+                    initialization_status["modules"]["gemma"]["status"] = "loading"
+                    initialization_status["overall_progress"] = 70
+                    await ws_manager.broadcast({
+                        "type": "initialization_progress",
+                        "status": initialization_status,
+                        "message": "🤖 Loading Gemma 3n model - this may take 3-5 minutes..."
+                    })
+                    
+                    from core.gemma_handler_v2 import GemmaHandlerV2
+                    self.gemma_handler = GemmaHandlerV2()
+                    
+                    # Diffuser pendant le chargement de Gemma
+                    await ws_manager.broadcast({
+                        "type": "initialization_progress",
+                        "status": initialization_status,
+                        "message": "🤖 Initializing Gemma 3n model weights..."
+                    })
+                    
+                    # VRAIE CHARGEMENT DU MODÈLE (bloquant)
+                    print("🤖 Starting Gemma 3n local model loading...")
+                    
+                    # Utiliser run_in_executor pour ne pas bloquer
+                    import asyncio
+                    loop = asyncio.get_event_loop()
+                    
+                    initialization_status["overall_progress"] = 75
+                    await ws_manager.broadcast({
+                        "type": "initialization_progress",
+                        "status": initialization_status,
+                        "message": "🤖 Loading Gemma 3n weights (3-5 minutes)..."
+                    })
+                    
+                    gemma_success = await loop.run_in_executor(
+                        None, self.gemma_handler.initialize_local_model
+                    )
+                    
+                    if gemma_success:
+                        initialization_status["modules"]["gemma"]["status"] = "ready"
+                        initialization_status["overall_progress"] = 100
+                        print("✅ Gemma 3n REALLY loaded and ready!")
+                        
+                        await ws_manager.broadcast({
+                            "type": "initialization_progress",
+                            "status": initialization_status,
+                            "message": "✅ Gemma 3n model loaded successfully!"
+                        })
+                    else:
+                        raise Exception("Gemma 3n failed to initialize")
+                    
+                except Exception as e:
+                    print(f"❌ Module initialization error: {e}")
+                    initialization_status["status"] = "error"
+                    initialization_status["error"] = str(e)
+                    await ws_manager.broadcast({
+                        "type": "initialization_error",
+                        "status": initialization_status,
+                        "error": str(e)
+                    })
+                    raise e
         
-        # Créer l'instance de l'application
-        retino_app = RetinoblastoGemmaV6(root)
+        # Créer l'instance headless
+        retino_app = HeadlessRetinoblastoGemma()
+        
+        # Initialiser les modules de façon asynchrone
+        await retino_app.initialize_real_modules()
         
         initialization_status["status"] = "ready"
         initialization_status["overall_progress"] = 100
         
         await ws_manager.broadcast({
             "type": "initialization_complete",
-            "status": initialization_status
+            "status": initialization_status,
+            "message": "All modules loaded successfully!"
         })
         
-        logger.info("✅ RetinoblastoGemma initialized successfully")
+        logger.info("✅ REAL RetinoblastoGemma initialized successfully")
+        print("🚀 SYSTEM READY FOR REAL ANALYSIS!")
         
     except Exception as e:
-        logger.error(f"❌ Initialization failed: {e}")
+        logger.error(f"❌ REAL Initialization failed: {e}")
+        print(f"❌ INITIALIZATION FAILED: {e}")
         initialization_status["status"] = "error"
         initialization_status["error"] = str(e)
         
@@ -259,16 +396,18 @@ async def upload_image(file: UploadFile = File(...)):
 
 @app.post("/api/analyze/{session_id}")
 async def start_analysis(session_id: str, settings: dict = None):
-    """Lance l'analyse de rétinoblastome"""
+    """Lance l'analyse RÉELLE de rétinoblastome"""
     try:
+        logger.info(f"🔍 REAL Analysis request for session: {session_id}")
+        
         if initialization_status["status"] != "ready":
             raise HTTPException(status_code=400, detail="System not ready yet")
         
         if not retino_app:
             raise HTTPException(status_code=400, detail="Application not initialized")
         
-        # Créer une tâche d'analyse en arrière-plan
-        analysis_task = asyncio.create_task(run_analysis_async(session_id, settings or {}))
+        # Lancer l'analyse RÉELLE en arrière-plan
+        analysis_task = asyncio.create_task(run_REAL_analysis_async(session_id, settings or {}))
         analysis_sessions[session_id] = {
             "status": "running",
             "progress": 0,
@@ -276,17 +415,105 @@ async def start_analysis(session_id: str, settings: dict = None):
             "start_time": time.time()
         }
         
-        logger.info(f"Analysis started for session: {session_id}")
+        logger.info(f"✅ REAL Analysis started for session: {session_id}")
         
         return {
             "session_id": session_id,
             "status": "started",
-            "message": "Analysis started in background"
+            "message": "REAL Analysis started with Gemma 3n"
         }
         
     except Exception as e:
-        logger.error(f"Analysis failed to start: {e}")
-        raise HTTPException(status_code=500, detail=f"Analysis failed to start: {str(e)}")
+        logger.error(f"REAL Analysis failed to start: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+async def run_REAL_analysis_async(session_id: str, settings: dict):
+    """Exécute l'analyse RÉELLE avec les vrais modules"""
+    try:
+        global retino_app
+        
+        # 1. Récupérer le chemin de l'image - CORRIGÉ
+        import glob
+        image_files = glob.glob(f"uploads/{session_id}_*")
+        if not image_files:
+            raise Exception(f"No image found for session {session_id}")
+        
+        image_path = image_files[0]  # Prendre le premier fichier trouvé
+        
+        await ws_manager.broadcast({
+            "type": "analysis_progress", 
+            "session_id": session_id,
+            "progress": 10,
+            "message": "Loading image with real eye detector..."
+        })
+        
+        # 2. VRAIE détection des yeux
+        detection_results = retino_app.eye_detector.detect_eyes_and_faces(
+            image_path, enhanced_mode=settings.get('enhanced_detection', True)
+        )
+        
+        await ws_manager.broadcast({
+            "type": "analysis_progress", 
+            "session_id": session_id,
+            "progress": 40,
+            "message": "Running REAL Gemma 3n analysis..."
+        })
+        
+        # 3. VRAIE analyse avec Gemma 3n
+        if retino_app.gemma_handler and retino_app.gemma_handler.is_ready():
+            analysis_results = retino_app.gemma_handler.analyze_eye_regions(
+                detection_results['regions'],
+                confidence_threshold=settings.get('confidence_threshold', 0.5)
+            )
+        else:
+            # Fallback si Gemma pas prêt
+            analysis_results = {
+                'regions_analyzed': len(detection_results.get('regions', [])),
+                'method': 'fallback_no_gemma',
+                'results': [{
+                    'region_id': 0,
+                    'region_type': 'fallback',
+                    'leukocoria_detected': False,
+                    'confidence': 25,
+                    'risk_level': 'unknown',
+                    'medical_reasoning': 'Gemma 3n not available - basic analysis only',
+                    'recommendations': 'Professional medical evaluation required',
+                    'urgency': 'soon'
+                }]
+            }
+        
+        await ws_manager.broadcast({
+            "type": "analysis_progress", 
+            "session_id": session_id,
+            "progress": 80,
+            "message": "Processing results..."
+        })
+        
+        # 4. Finaliser
+        analysis_sessions[session_id] = {
+            "status": "completed",
+            "progress": 100,
+            "results": analysis_results,
+            "completed_time": time.time()
+        }
+        
+        await ws_manager.broadcast({
+            "type": "analysis_complete",
+            "session_id": session_id,
+            "progress": 100,
+            "results": analysis_results
+        })
+        
+        logger.info(f"✅ REAL Analysis completed for session: {session_id}")
+        
+    except Exception as e:
+        logger.error(f"❌ REAL Analysis error: {e}")
+        await ws_manager.broadcast({
+            "type": "analysis_error",
+            "session_id": session_id,
+            "error": str(e)
+        })
 
 async def run_analysis_async(session_id: str, settings: dict):
     """Exécute l'analyse en arrière-plan avec WebSocket updates"""

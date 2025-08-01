@@ -60,6 +60,7 @@ export const RetinoblastomaInterface = () => {
   const [confidence, setConfidence] = useState([0.5]);
   const [faceTracking, setFaceTracking] = useState(true);
   const [enhancedDetection, setEnhancedDetection] = useState(true);
+  const [initMessage, setInitMessage] = useState<string>('');
   const [sessionStats, setSessionStats] = useState<AnalysisSession>({
     totalAnalyses: 0,
     positiveDetections: 0,
@@ -79,59 +80,103 @@ export const RetinoblastomaInterface = () => {
 
   // Effet pour la connexion WebSocket
   useEffect(() => {
-    const connectWebSocket = () => {
-      const ws = new WebSocket('ws://localhost:8001/ws/progress');
-      
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-        setWsConnection(ws);
-      };
-      
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        
-        switch (data.type) {
-          case 'initialization_progress':
-          case 'status_update':
-            setSystemStatus(data.status);
-            break;
-          case 'analysis_progress':
-            setAnalysisProgress(data.progress);
-            break;
-          case 'analysis_complete':
-            setAnalysisProgress(100);
-            setIsAnalyzing(false);
-            // Traiter les résultats
-            console.log('Analysis complete:', data.results);
-            break;
-          case 'analysis_error':
-            setIsAnalyzing(false);
-            console.error('Analysis error:', data.error);
-            break;
-        }
-      };
-      
-      ws.onclose = () => {
-        console.log('WebSocket disconnected');
-        setWsConnection(null);
-        // Reconnexion automatique après 3 secondes
-        setTimeout(connectWebSocket, 3000);
-      };
-      
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
+  const connectWebSocket = () => {
+    console.log('🔌 Connecting to WebSocket...');
+    const ws = new WebSocket('ws://localhost:8001/ws/progress');
+    
+    ws.onopen = () => {
+      console.log('✅ WebSocket connected to backend');
+      setWsConnection(ws);
     };
     
-    connectWebSocket();
-    
-    // Cleanup
-    return () => {
-      if (wsConnection) {
-        wsConnection.close();
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('📨 WebSocket message received:', data);
+      
+      switch (data.type) {
+        case 'initialization_progress':
+          console.log('🔄 Initialization progress:', data.status);
+          setSystemStatus(data.status);
+          setInitMessage(data.message || '');
+          break;
+          
+        case 'initialization_complete':
+          console.log('✅ Initialization complete!');
+          setSystemStatus(prev => ({
+            ...prev,
+            status: 'ready',
+            ready: true,
+            overall_progress: 100
+          }));
+          break;
+          
+        case 'initialization_error':
+          console.error('❌ Initialization error:', data.error);
+          setSystemStatus(prev => ({
+            ...prev,
+            status: 'error',
+            ready: false
+          }));
+          break;
+          
+        case 'status_update':
+          console.log('📊 Status update:', data.status);
+          setSystemStatus(data.status);
+          break;
+          
+        case 'analysis_progress':
+          console.log('🔍 Analysis progress:', data.progress);
+          setAnalysisProgress(data.progress);
+          break;
+          
+        case 'analysis_complete':
+          console.log('✅ Analysis complete:', data.results);
+          setAnalysisProgress(100);
+          setIsAnalyzing(false);
+          setSessionStats(current => ({
+            ...current,
+            totalAnalyses: current.totalAnalyses + 1,
+            positiveDetections: current.positiveDetections + 
+              (data.results?.results?.filter(r => r.leukocoria_detected)?.length || 0)
+          }));
+          break;
+          
+        case 'analysis_error':
+          console.error('❌ Analysis error:', data.error);
+          setIsAnalyzing(false);
+          alert(`Analysis failed: ${data.error}`);
+          break;
+          
+        case 'ping':
+          // Ignore ping messages
+          break;
+          
+        default:
+          console.log('📨 Unknown message type:', data.type);
       }
     };
-  }, []); // Dépendances vides pour éviter les reconnexions infinies
+    
+    ws.onclose = () => {
+      console.log('❌ WebSocket disconnected');
+      setWsConnection(null);
+      // Reconnexion automatique après 3 secondes
+      setTimeout(connectWebSocket, 3000);
+    };
+    
+    ws.onerror = (error) => {
+      console.error('❌ WebSocket error:', error);
+    };
+  };
+  
+  connectWebSocket();
+  
+  // Cleanup
+  return () => {
+    if (wsConnection) {
+      wsConnection.close();
+    }
+  };
+}, []); // Dépendances vides pour éviter les reconnexions infinies // Dépendances vides pour éviter les reconnexions infinies
 
   // Fonction de gestion de l'upload d'image
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,63 +224,65 @@ export const RetinoblastomaInterface = () => {
 
   // Fonction d'analyse
   const handleAnalyze = async () => {
+    console.log('🔍 ANALYZE CLICKED - REAL MODE ONLY');
+    console.log('selectedImage:', selectedImage);
+    console.log('currentSessionId:', currentSessionId);
+    console.log('systemStatus:', systemStatus);
+    
     if (!selectedImage) {
       alert('Please select an image first');
       return;
     }
-    
-    // Si pas de session WebSocket active, utiliser mode démo
-    if (!currentSessionId || !systemStatus.ready) {
-      console.log('Using demo mode for analysis');
-      setIsAnalyzing(true);
-      setAnalysisProgress(0);
 
-      // Simulation de l'analyse
-      const interval = setInterval(() => {
-        setAnalysisProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setIsAnalyzing(false);
-            setSessionStats(current => ({
-              ...current,
-              totalAnalyses: current.totalAnalyses + 1
-            }));
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 200);
+    if (!currentSessionId) {
+      alert('No session ID found. Please re-upload the image.');
       return;
     }
-    
-    // Mode API réel
+
+    // PLUS DE MODE DÉMO - SEULEMENT LE VRAI BACKEND
+    if (!systemStatus.ready) {
+      alert('System is not ready yet. Please wait for all modules to load.');
+      return;
+    }
+
+    console.log('🚀 Starting REAL analysis with backend');
+
     try {
       setIsAnalyzing(true);
       setAnalysisProgress(0);
-      
+
+      const requestBody = {
+        confidence_threshold: confidence[0],
+        face_tracking: faceTracking,
+        enhanced_detection: enhancedDetection
+      };
+
+      console.log('📤 Sending request to backend:', requestBody);
+
       const response = await fetch(`http://localhost:8001/api/analyze/${currentSessionId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          confidence_threshold: confidence[0],
-          face_tracking: faceTracking,
-          enhanced_detection: enhancedDetection
-        })
+        body: JSON.stringify(requestBody)
       });
-      
+
+      console.log('📥 Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Analysis failed to start');
+        const errorText = await response.text();
+        throw new Error(`Backend error: ${response.status} - ${errorText}`);
       }
-      
+
       const result = await response.json();
-      console.log('Analysis started:', result);
-      
+      console.log('✅ Analysis request sent successfully:', result);
+
+      // Le WebSocket se chargera de recevoir les mises à jour de progression
+
     } catch (error) {
-      console.error('Analysis error:', error);
+      console.error('❌ Analysis request failed:', error);
       setIsAnalyzing(false);
-      alert('Failed to start analysis');
+      alert(`Failed to start analysis: ${error.message}`);
     }
   };
 
@@ -260,9 +307,12 @@ export const RetinoblastomaInterface = () => {
                 <Shield className="w-4 h-4 mr-1" />
                 100% Local
               </Badge>
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+              <Badge variant="secondary" className={`${
+                systemStatus.ready ? 'bg-green-500/20 text-green-700 border-green-500/30' : 
+                'bg-yellow-500/20 text-yellow-700 border-yellow-500/30'
+              }`}>
                 <Brain className="w-4 h-4 mr-1" />
-                Gemma 3n Ready
+                {systemStatus.ready ? 'Gemma 3n Ready' : 'Gemma 3n Loading...'}
               </Badge>
               <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                 <CheckCircle className="w-4 h-4 mr-1" />
@@ -277,9 +327,15 @@ export const RetinoblastomaInterface = () => {
         {/* Control Panel */}
         <div className="w-80 bg-white/80 backdrop-blur-sm border-r border-white/20 p-6 space-y-6 overflow-y-auto">
           {/* System Status */}
-          <Card className="border-green-200">
+          <Card className={`border-2 ${
+            systemStatus.ready ? 'border-green-200' : 
+            systemStatus.status === 'error' ? 'border-red-200' : 'border-yellow-200'
+          }`}>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-green-700">
+              <CardTitle className={`flex items-center gap-2 ${
+                systemStatus.ready ? 'text-green-700' : 
+                systemStatus.status === 'error' ? 'text-red-700' : 'text-yellow-700'
+              }`}>
                 <Activity className="w-5 h-5" />
                 System Status
               </CardTitle>
@@ -287,20 +343,59 @@ export const RetinoblastomaInterface = () => {
             <CardContent className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Status:</span>
-                <span className="font-semibold text-green-600">
-                  {systemStatus.ready ? 'Ready' : systemStatus.status}
+                <span className={`font-semibold ${
+                  systemStatus.ready ? 'text-green-600' : 
+                  systemStatus.status === 'error' ? 'text-red-600' : 'text-yellow-600'
+                }`}>
+                  {systemStatus.ready ? 'Ready' : systemStatus.status || 'Initializing'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Progress:</span>
+                <span className="font-semibold text-blue-600">
+                  {systemStatus.overall_progress || 0}%
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Connection:</span>
-                <span className="font-semibold text-green-600">
-                  {wsConnection ? 'Connected' : 'Demo Mode'}
+                <span className={`font-semibold ${wsConnection ? 'text-green-600' : 'text-red-600'}`}>
+                  {wsConnection ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>GPU:</span>
-                <span className="font-semibold text-green-600">Available</span>
+                <span>Modules:</span>
+                <span className="font-semibold text-blue-600">
+                  {Object.values(systemStatus.modules || {}).filter(m => m.status === 'ready').length}/4
+                </span>
               </div>
+              
+              {/* Progress bar for initialization */}
+              {!systemStatus.ready && (
+                <div className="mt-3 space-y-2">
+                  <Progress value={systemStatus.overall_progress || 0} className="h-2" />
+                  <p className="text-xs text-muted-foreground text-center">
+                    System initializing... Please wait.
+                  </p>
+                </div>
+              )}
+              
+              {/* Detailed module status */}
+              {systemStatus.modules && (
+                <div className="mt-3 space-y-1">
+                  {Object.entries(systemStatus.modules).map(([name, module]) => (
+                    <div key={name} className="flex justify-between text-xs">
+                      <span className="capitalize">{name.replace('_', ' ')}:</span>
+                      <span className={`font-semibold ${
+                        module.status === 'ready' ? 'text-green-600' :
+                        module.status === 'error' ? 'text-red-600' : 
+                        module.status === 'loading' ? 'text-yellow-600' : 'text-gray-600'
+                      }`}>
+                        {module.status === 'loading' ? 'Loading...' : module.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
