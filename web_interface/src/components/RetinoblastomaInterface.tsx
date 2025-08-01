@@ -296,7 +296,7 @@ export const RetinoblastomaInterface = () => {
               <div className="flex items-center gap-2 text-white">
                 <Eye className="w-8 h-8" />
                 <div>
-                  <h1 className="text-2xl font-bold">RetinoblastoGemma v6</h1>
+                  <h1 className="text-2xl font-bold">RetinoblastoGemma</h1>
                   <p className="text-blue-100 text-sm">Google Gemma Hackathon</p>
                 </div>
               </div>
@@ -308,7 +308,7 @@ export const RetinoblastomaInterface = () => {
                 100% Local
               </Badge>
               <Badge variant="secondary" className={`${
-                systemStatus.ready ? 'bg-green-500/20 text-green-700 border-green-500/30' : 
+                systemStatus.ready ? 'bg-emerald-400/30 text-emerald-100 border-emerald-300/50' : 
                 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30'
               }`}>
                 <Brain className="w-4 h-4 mr-1" />

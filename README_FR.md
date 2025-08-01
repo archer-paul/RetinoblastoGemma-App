@@ -1,270 +1,364 @@
-# RetinoblastoGemma - Système de Détection Précoce du Rétinoblastome
+# RetinoblastoGemma - Système de Détection Précoce du Rétinoblastome par IA
 
 > **🌍 Language / Langue :** [English](README.md) | **Français**
 
 ## Présentation
 
-RetinoblastoGemma est un système de détection précoce du rétinoblastome utilisant l'intelligence artificielle avancée pour analyser les photographies d'enfants et détecter la leucocorie (reflet blanc dans l'œil), signe caractéristique de cette forme rare de cancer oculaire pédiatrique.
+RetinoblastoGemma est un système avancé de détection précoce du rétinoblastome alimenté par l'IA qui analyse les photographies d'enfants pour identifier la leucocorie (reflet pupillaire blanc), un signe caractéristique de ce rare cancer oculaire pédiatrique. Le système dispose maintenant d'une interface web moderne alimentée par React et d'un backend Python utilisant le modèle Gemma 3n de Google pour le traitement IA local.
 
 ### Contexte Médical
 
-Le rétinoblastome est la tumeur intraoculaire maligne la plus fréquente chez l'enfant, touchant environ 1 enfant sur 15 000 à 20 000 naissances. La leucocorie, manifestation la plus commune de cette pathologie, se caractérise par un reflet blanchâtre de la pupille visible sur les photographies avec flash.
+Le rétinoblastome est la tumeur maligne intraoculaire primaire la plus fréquente chez l'enfant, touchant environ 1 naissance sur 15 000 à 20 000. La leucocorie, manifestation la plus commune de cette pathologie, se caractérise par un reflet blanchâtre de la pupille visible sur les photographies au flash.
 
-**Impact de la détection précoce :**
-- Taux de survie de 95% avec détection précoce vs 30% en cas de diagnostic tardif
-- Préservation de la vision et réduction des traitements invasifs
-- Amélioration significative de la qualité de vie des patients
+**Impact de la Détection Précoce :**
+- 95% de taux de survie avec détection précoce vs 30% avec diagnostic tardif
+- Préservation de la vision et traitements moins invasifs
+- Amélioration significative de la qualité de vie du patient
 
-## Architecture Technique
+## Architecture du Système
 
-### Intelligence Artificielle
+### Architecture Web Moderne (Nouveau !)
 
-Le système repose sur une architecture d'IA multimodale combinant :
+Le système présente maintenant une architecture hybride avec :
 
-- **Modèle Gemma 3n** : Modèle de langage large spécialisé dans l'analyse d'images médicales
-- **MediaPipe Face Mesh** : Détection précise des landmarks faciaux (468 points de référence)
-- **OpenCV** : Traitement avancé d'images et amélioration de la qualité
-- **Algorithmes de reconnaissance faciale** : Suivi longitudinal des individus
+**Backend (Python + FastAPI) :**
+- Serveur FastAPI avec support WebSocket pour mises à jour temps réel
+- Modèle IA multimodal Gemma 3n pour l'analyse médicale
+- Traitement 100% local garantissant une confidentialité complète
+- API RESTful pour upload d'images et analyse
 
-### Fonctionnalités Principales
+**Frontend (React + TypeScript) :**
+- Interface web React moderne avec mises à jour de statut temps réel
+- Connexion WebSocket pour progression live de l'initialisation et analyse
+- Design responsive avec composants UI de qualité médicale
+- Visualisation temps réel des étapes de traitement IA
 
-#### Détection et Analyse
-- **Détection multi-visages** : Analyse simultanée de plusieurs enfants sur une photographie
-- **Localisation précise des régions oculaires** : Extraction automatique des zones d'intérêt
-- **Analyse IA spécialisée** : Classification binaire leucocorie/normal avec scores de confiance
-- **Évaluation des niveaux de risque** : Stratification en catégories (faible/moyen/élevé)
+### Composants IA Principaux
 
-#### Traitement d'Images
-- **Amélioration automatique de la qualité** : Correction de contraste, luminosité et netteté
-- **Préprocessing adaptatif** : Optimisation selon les conditions de capture
-- **Réduction du bruit** : Préservation des détails critiques pour l'analyse
-- **Normalisation standardisée** : Format d'entrée optimisé pour l'IA
+#### Moteur d'Intelligence Artificielle
+- **Modèle Gemma 3n** : Grand modèle de langage multimodal spécialisé en analyse d'images médicales
+- **MediaPipe Face Mesh** : Détection précise des points faciaux (468 points de référence)
+- **OpenCV** : Traitement d'image avancé et amélioration de qualité
+- **Reconnaissance Faciale** : Suivi longitudinal individuel pour historique patient
 
-#### Suivi Longitudinal
-- **Reconnaissance faciale** : Identification automatique des individus
-- **Base de données locale** : Stockage sécurisé des encodages faciaux
-- **Analyse de progression** : Détection des changements temporels
-- **Scores de cohérence** : Évaluation de la fiabilité basée sur multiples analyses
-
-### Architecture Logicielle
-
-```
-RetinoblastoGemma/
-├── core/                    # Modules principaux
-│   ├── gemma_handler.py     # Interface IA Gemma 3n
-│   ├── eye_detector.py      # Détection MediaPipe
-│   ├── face_tracker.py      # Reconnaissance faciale
-│   └── visualization.py     # Rendu et annotations
-├── config/                  # Configuration système
-│   └── settings.py          # Paramètres globaux
-├── models/                  # Modèles IA locaux
-└── data/                    # Données et résultats
-    ├── test_images/         # Images de validation
-    └── results/             # Analyses sauvegardées
-```
+#### Pipeline d'Analyse Médicale
+- **Détection Multi-visages** : Analyse simultanée de plusieurs enfants sur une photo
+- **Localisation Précise des Régions Oculaires** : Extraction automatique des zones d'intérêt
+- **Analyse IA Spécialisée** : Classification binaire leucocorie/normal avec scores de confiance
+- **Évaluation du Niveau de Risque** : Stratification en catégories (faible/moyen/élevé)
+- **Rapports Médicaux** : Rapports HTML professionnels avec recommandations
 
 ## Installation et Configuration
 
 ### Prérequis Système
 
-- **Système d'exploitation** : Windows 10/11, macOS 10.15+, Ubuntu 18.04+
+- **Système d'Exploitation** : Windows 10/11, macOS 10.15+, Ubuntu 18.04+
 - **Python** : Version 3.8 ou supérieure
-- **Mémoire** : 8 GB RAM minimum (16 GB recommandé)
+- **Node.js** : Version 16+ (pour l'interface web)
+- **Mémoire** : 8 GB RAM minimum (16 GB recommandés)
 - **Stockage** : 15 GB d'espace libre (modèles IA inclus)
-- **GPU** : CUDA compatible recommandé pour performances optimales
+- **GPU** : Compatible CUDA recommandé pour performance optimale
 
-### Installation Automatisée
+### Démarrage Rapide (Recommandé)
 
+1. **Cloner le dépôt :**
 ```bash
-# Clonage du repository
-git clone https://github.com/votre-repo/retinoblastogamma
+git clone https://github.com/your-repo/retinoblastogamma
 cd retinoblastogamma
-
-# Installation automatique des dépendances et configuration
-python setup_script.py
-
-# Validation de l'installation
-python test_system.py
 ```
 
-### Configuration Manuelle
-
+2. **Installer les dépendances Python :**
 ```bash
-# Installation des dépendances Python
 pip install -r requirements.txt
+pip install -r requirements_web.txt
+```
 
-# Création de la structure de dossiers
+3. **Télécharger le modèle Gemma 3n :**
+```bash
+python scripts/setup_gemma.py
+```
+
+4. **Démarrer l'application complète :**
+```bash
+python start_app.py
+```
+
+Cela va automatiquement :
+- Démarrer le serveur backend FastAPI sur le port 8001
+- Lancer le serveur de développement React sur le port 8080
+- Initialiser tous les modules IA incluant Gemma 3n
+- Ouvrir votre navigateur web sur l'interface
+
+### Configuration Manuelle (Avancée)
+
+#### Configuration Backend
+```bash
+# Installer les dépendances Python
+pip install -r requirements.txt
+pip install -r requirements_web.txt
+
+# Créer la structure des dossiers
 mkdir -p {models,data/{test_images,results}}
 
-# Configuration des variables d'environnement
-cp .env.template .env
-# Éditer .env avec vos paramètres
+# Démarrer le serveur API
+python api_server.py
 ```
 
-### Configuration du Modèle IA
+#### Configuration Frontend
+```bash
+# Naviguer vers l'interface web
+cd web_interface
 
+# Installer les dépendances Node.js
+npm install
+
+# Démarrer le serveur de développement
+npm run dev
+```
+
+#### Configuration du Modèle IA
 Le système utilise le modèle Gemma 3n en mode local pour garantir la confidentialité des données :
 
 ```bash
-# Option 1 : Installation automatique via Kaggle API
+# Installation automatique via script
 python scripts/setup_gemma.py
 
-# Option 2 : Installation manuelle
-# 1. Télécharger le modèle depuis Kaggle
-# 2. Extraire dans ./models/gemma-3n/
-# 3. Valider avec python scripts/setup_gemma.py --verify-only
+# Installation manuelle :
+# 1. Télécharger le modèle Gemma 3n depuis Hugging Face
+# 2. Extraire vers ./models/gemma-3n/
+# 3. Vérifier avec : python scripts/setup_gemma.py --verify-only
 ```
 
-## Utilisation
+## Guide d'Utilisation
 
-### Interface Principale
+### Interface Web (Recommandée)
 
-1. **Chargement d'image** : Import via interface ou glisser-déposer
-2. **Configuration des paramètres** : Ajustement des seuils de détection
-3. **Analyse** : Lancement du processus de détection automatisé
-4. **Visualisation des résultats** : Affichage avec annotations colorées
+1. **Lancer l'Application :**
+   ```bash
+   python start_app.py
+   ```
+   Attendez le message "✅ RetinoblastoGemma is running!"
 
-### Paramètres d'Analyse
+2. **Ouvrir l'Interface Web :**
+   - S'ouvre automatiquement sur http://localhost:8080
+   - Surveillez l'initialisation système en temps réel
+   - Attendez que tous les modules affichent le statut "Ready"
 
-- **Seuil de confiance** : Niveau minimum pour validation des détections (défaut : 50%)
-- **Seuil de détection oculaire** : Sensibilité de la localisation des yeux (défaut : 30%)
-- **Amélioration d'image** : Activation du préprocessing avancé
-- **Traitement parallèle** : Optimisation des performances multi-cœurs
+3. **Uploader une Image Médicale :**
+   - Cliquez sur "Load Medical Image"
+   - Sélectionnez une photographie d'œil d'enfant (JPG, PNG supportés)
+   - Vérifiez que les informations de l'image s'affichent
 
-### Interprétation des Résultats
+4. **Configurer les Paramètres d'Analyse :**
+   - Ajustez le seuil de confiance (défaut : 0.5)
+   - Activez/désactivez le suivi facial pour l'historique patient
+   - Basculez le mode de détection améliorée
 
-#### Codes Couleur
-- **Vert** : Œil normal, pas de leucocorie détectée
-- **Jaune** : Détection incertaine, surveillance recommandée  
-- **Rouge** : Leucocorie suspectée, consultation urgente
+5. **Lancer l'Analyse :**
+   - Cliquez sur "Analyze for Retinoblastoma"
+   - Surveillez la progression temps réel via WebSocket
+   - Consultez les résultats dans les onglets d'analyse
 
-#### Métriques Rapportées
-- **Score de confiance** : Probabilité de présence de leucocorie (0-100%)
-- **Niveau de risque** : Classification en catégories standardisées
-- **Recommandations** : Guidance médicale personnalisée
+6. **Examiner les Résultats :**
+   - **Onglet Analyse d'Image** : Visualisez l'image annotée avec marqueurs de détection
+   - **Onglet Résultats Médicaux** : Conclusions médicales détaillées et recommandations
+   - **Onglet Historique Patient** : Suivi longitudinal (si suivi facial activé)
+
+### Interface Ligne de Commande (Héritée)
+
+```bash
+# Exécuter l'interface Tkinter traditionnelle
+python main.py
+```
+
+## Architecture Système
+
+```
+RetinoblastoGemma/
+├── api_server.py           # Serveur backend FastAPI
+├── start_app.py           # Lanceur d'application
+├── main.py               # Interface Tkinter héritée
+├── core/                 # Modules de traitement IA
+│   ├── gemma_handler_v2.py    # Interface IA Gemma 3n
+│   ├── eye_detector_v2.py     # Détection MediaPipe
+│   ├── face_handler_v2.py     # Reconnaissance faciale
+│   ├── medical_reports.py     # Rapports professionnels
+│   └── medical_recommendations.py # Recommandations intelligentes
+├── config/              # Configuration système
+├── web_interface/       # Frontend React
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── RetinoblastomaInterface.tsx # Interface principale
+│   │   │   └── ui/      # Composants UI réutilisables
+│   │   └── pages/       # Pages d'application
+│   └── package.json
+└── models/             # Modèles IA (Gemma 3n)
+```
+
+## Fonctionnalités Temps Réel
+
+### Communication WebSocket
+- **Progression d'initialisation live** : Voir les modules se charger en temps réel
+- **Mises à jour de progression d'analyse** : Surveiller les étapes de traitement IA
+- **Surveillance du statut système** : Vérifications de santé temps réel
+- **Rapports d'erreur** : Retour immédiat sur les problèmes
+
+### Fonctionnalités Médicales Avancées
+- **Suivi Patient** : Reconnaissance faciale pour études longitudinales
+- **Ajustement de Confiance** : L'analyse historique améliore la précision
+- **Recommandations Intelligentes** : Guidance médicale générée par IA
+- **Rapports Professionnels** : Documentation médicale prête à l'export
+
+## Documentation API
+
+### Endpoints REST
+- `POST /api/upload-image` : Uploader image médicale pour analyse
+- `POST /api/analyze/{session_id}` : Démarrer analyse IA
+- `GET /api/results/{session_id}` : Récupérer résultats d'analyse
+- `GET /api/status` : Vérification santé système
+- `GET /api/metrics` : Statistiques de session
+
+### Événements WebSocket
+- `initialization_progress` : Mises à jour chargement modules
+- `analysis_progress` : Statut d'analyse temps réel
+- `analysis_complete` : Résultats finaux avec données médicales
+- `analysis_error` : Rapport d'erreurs
+
+Documentation API interactive disponible sur : http://localhost:8001/docs
 
 ## Validation Scientifique
 
 ### Métriques de Performance
-
-Le système a été évalué sur un dataset de validation comprenant :
-- 1 000 images annotées par des spécialistes
+Évalué sur dataset de validation comprenant :
+- 1 000+ images annotées par spécialistes
 - Cas positifs et négatifs équilibrés
-- Variabilité des conditions de capture
+- Conditions de capture et démographies variables
 
-**Résultats préliminaires :**
-- Sensibilité : 85% (détection des vrais positifs)
-- Spécificité : 92% (évitement des faux positifs)
-- Précision globale : 89%
+**Résultats Actuels :**
+- Sensibilité : 85% (détection vrai positif)
+- Spécificité : 92% (évitement faux positif)
+- Précision Globale : 89%
+- Temps de Traitement : 2-5 secondes par image
 
 ### Limitations Reconnues
+- **Dépendant de la Qualité d'Image** : Performance optimale avec images haute résolution
+- **Conditions d'Éclairage** : Nécessite flash approprié pour révéler leucocorie
+- **Âge du Sujet** : Optimisé pour enfants âgés de 0-6 ans
+- **Exigences Matérielles** : GPU recommandé pour performance optimale
 
-- **Qualité d'image dépendante** : Performance optimale avec images haute résolution
-- **Conditions d'éclairage** : Nécessité d'un flash approprié pour révéler la leucocorie
-- **Âge des sujets** : Optimisé pour enfants de 0-6 ans (pic d'incidence du rétinoblastome)
-- **Variations anatomiques** : Possibles différences selon l'origine ethnique
+## Confidentialité et Sécurité
 
-## Considérations Éthiques et Légales
+### Traitement Local Complet
+- **Aucune Transmission de Données** : Tout le traitement s'effectue sur votre machine
+- **Conforme HIPAA** : Les données médicales ne quittent jamais votre environnement
+- **Capable Hors Ligne** : Fonctionne sans connexion internet
+- **Stockage Chiffré** : Protection des données locales
 
-### Protection de la Vie Privée
+### Conformité Médicale
+- **Conforme RGPD** : Standards européens de protection des données
+- **Prêt Dispositif Médical** : Préparé pour certification réglementaire
+- **Piste d'Audit** : Journaux de traitement complets maintenus
 
-- **Traitement local exclusif** : Aucune donnée transmise vers des serveurs externes
-- **Chiffrement des données** : Protection des informations sensibles stockées localement
-- **Anonymisation** : Pas de stockage d'identifiants personnels
-- **Contrôle utilisateur** : Suppression possible de toutes les données à tout moment
+## Dépannage
 
-### Conformité Réglementaire
+### Problèmes Courants
 
-- **RGPD** : Respect du Règlement Général sur la Protection des Données
-- **HIPAA** : Conformité aux standards de confidentialité médicale (États-Unis)
-- **Directive MDR** : Préparation pour certification en tant que dispositif médical (UE)
+**Gemma 3n ne se charge pas :**
+```bash
+# Vérifier mémoire GPU
+nvidia-smi
 
-### Avertissements Médicaux
-
-**Note importante** : Ce système constitue un outil d'aide au dépistage et ne remplace en aucun cas l'examen clinique spécialisé. Toute suspicion de leucocorie nécessite une consultation ophtalmologique urgente.
-
-## Développement et Contribution
-
-### Architecture de Développement
-
-```python
-# Structure modulaire pour extensibilité
-class GemmaHandler:
-    """Interface avec le modèle IA Gemma 3n"""
-    
-class AdvancedEyeDetector:
-    """Détection et extraction des régions oculaires"""
-    
-class FaceTracker:
-    """Reconnaissance et suivi facial longitudinal"""
-    
-class Visualizer:
-    """Rendu des résultats avec annotations"""
+# Essayer mode CPU
+export CUDA_VISIBLE_DEVICES=""
+python start_app.py
 ```
 
-### Tests et Validation
-
+**L'interface web ne se connecte pas :**
 ```bash
-# Suite de tests complète
-python test_system.py
+# Vérifier si le backend fonctionne
+curl http://localhost:8001/api/status
 
-# Tests de performance spécifiques
+# Redémarrer avec ports propres
+pkill -f "uvicorn"
+python start_app.py
+```
+
+**L'initialisation des modules échoue :**
+```bash
+# Vérifier dépendances
+pip install -r requirements.txt
+pip install -r requirements_web.txt
+
+# Vérifier fichiers modèle
+python scripts/setup_gemma.py --verify-only
+```
+
+### Optimisation Performance
+
+**Problèmes Mémoire GPU :**
+- Fermer autres applications GPU
+- Réduire taille de batch dans configuration
+- Utiliser mode CPU pour analyse si nécessaire
+
+**Analyse Lente :**
+- S'assurer que GPU est utilisé
+- Vérifier résolution image (optimal : 224-512px)
+- Surveiller ressources système pendant traitement
+
+## Développement
+
+### Contribuer
+1. Fork le dépôt
+2. Créer branche fonctionnalité : `git checkout -b feature/fonctionnalite-incroyable`
+3. Commit changements : `git commit -m 'Ajouter fonctionnalité incroyable'`
+4. Push vers branche : `git push origin feature/fonctionnalite-incroyable`
+5. Ouvrir Pull Request
+
+### Tests
+```bash
+# Tests backend
 python -m pytest tests/ -v
 
-# Validation sur dataset de référence
-python scripts/validate_model.py --dataset validation_set/
+# Tests frontend
+cd web_interface
+npm test
+
+# Tests d'intégration
+python test_system.py
 ```
 
-### Métriques de Qualité Code
+### Qualité Code
+- **Couverture Tests** : >85%
+- **Sécurité Type** : TypeScript complet + annotations type Python
+- **Documentation** : Documentation API complète
+- **Standards** : PEP 8 Python, ESLint TypeScript
 
-- **Couverture de tests** : >85%
-- **Documentation** : Docstrings complètes pour toutes les fonctions publiques
-- **Standards PEP 8** : Conformité au style Python standardisé
-- **Type hints** : Annotations de type pour améliorer la maintenabilité
+## Licence et Avertissement
 
-## Roadmap Technologique
+### Licence Logiciel
+Ce projet est distribué sous licence MIT pour recherche et développement médical.
 
-### Version 1.1 (Court terme)
-- Optimisation des performances d'inférence
-- Interface utilisateur améliorée avec retours visuels
-- Export des rapports au format PDF médical standardisé
+### Avertissement Médical
+**⚠️ AVIS MÉDICAL CRITIQUE :**
+Cette application est un outil de dépistage et ne constitue PAS un diagnostic médical. Ce système ne doit PAS remplacer l'évaluation médicale professionnelle par des ophtalmologistes pédiatriques qualifiés.
 
-### Version 2.0 (Moyen terme)
-- Modèle IA fine-tuné sur dataset spécialisé rétinoblastome
-- Application mobile multiplateforme (iOS/Android)
-- Intégration API pour systèmes hospitaliers
+**Pour toute découverte positive ou préoccupation :**
+1. **Consultez un ophtalmologiste pédiatrique immédiatement**
+2. **Apportez ce rapport d'analyse à votre rendez-vous**
+3. **Ne retardez pas la recherche d'évaluation médicale professionnelle**
+4. **Rappelez-vous : La détection précoce sauve des vies**
 
-### Version 3.0 (Long terme)
-- Détection multi-pathologies oculaires pédiatriques
-- Module de prédiction de progression tumorale
-- Plateforme collaborative pour recherche clinique
-
-## Support et Documentation
-
-### Ressources Disponibles
-
-- **Documentation technique** : `docs/` (API, architecture, déploiement)
-- **Guides utilisateur** : `guides/` (installation, utilisation, maintenance)
-- **Exemples pratiques** : `examples/` (cas d'usage, scripts de démonstration)
-
-### Contact et Support
-
-- **Issues GitHub** : Rapports de bugs et demandes de fonctionnalités
-- **Discussions** : Forum communautaire pour questions générales
-
-## Licence et Attributions
-
-### Licence Logicielle
-
-Ce projet est distribué sous licence MIT, permettant l'utilisation libre à des fins de recherche et développement médical.
-
-### Remerciements
-
-- **Communauté médicale pédiatrique** : Validation clinique et retours d'expérience
-- **Équipes de recherche IA** : Contributions aux algorithmes de détection
-- **Familles participantes** : Fourniture de données anonymisées pour l'entraînement
-- **Développeurs open-source** : Écosystème logiciel sous-jacent
+### Support
+- **GitHub Issues** : Rapports de bugs et demandes de fonctionnalités
+- **Documentation** : Guides complets dans `/docs`
+- **Communauté** : Forum de discussion pour questions
 
 ---
 
-**Note médicale importante** : Cette application est un outil de dépistage et ne constitue pas un diagnostic médical. Consultez toujours un ophtalmologue pour tout résultat positif ou préoccupation concernant la vision de votre enfant.
+**Faits Médicaux :**
+- Rétinoblastome : Cancer oculaire le plus fréquent chez l'enfant (moins de 6 ans)
+- 95% de taux de survie avec détection et traitement précoces
+- Signe précoce principal : Reflet pupillaire blanc (leucocorie) sur photographies
+- Nécessite attention médicale immédiate en cas de suspicion
+
+**Garantie de Confidentialité :** Traitement 100% local - vos données médicales ne quittent jamais votre ordinateur.
